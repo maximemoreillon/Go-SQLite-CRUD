@@ -15,62 +15,37 @@ type Movie struct {
 	Year int
 }
 
-
-func createMovie (db *sql.DB) {
-	newMovie := Movie{0, "Inception", 2006}
-	_, err := db.Exec("INSERT INTO movies VALUES(null,?,?);", newMovie.Title, newMovie.Year)
-	if err != nil {
-		panic(err)
-	}
-}
-
-
-func readMovies (db *sql.DB) []Movie {
-	movies := []Movie {}
-	rows, err := db.Query("SELECT * FROM movies ORDER BY id DESC LIMIT 100")
-	if err != nil {
-		panic(err)
-	}
-	for rows.Next() {
-		movie := Movie{}
-		err = rows.Scan(&movie.ID, &movie.Title, &movie.Year)
-		if err != nil {
-			panic(err)
-		}
-		movies = append(movies, movie)
-	}
-	return movies
-}
-
-func readMovie (db *sql.DB, id int) Movie {
-	foundMovie := Movie{}
-	row:= db.QueryRow("SELECT * FROM movies WHERE id=?", id)
-	row.Scan(&foundMovie.ID, &foundMovie.Title, &foundMovie.Year)
-	return foundMovie
-}
-
-
-func updateMovie (db *sql.DB, id int, newTitle string) {
-	_, upErr := db.Exec("UPDATE movies SET title=? WHERE id=?", newTitle, id)
-	if upErr != nil {
-		panic(upErr)
-	}
-}
-
-func deleteMovie  (db *sql.DB, id int) {
-	_, err := db.Exec("DELETE FROM movies WHERE id=?;", id)
-	if err != nil {
-		panic(err)
-	}
-}
-
-func main () {
+func openDb () *sql.DB {
 	const file string = "movies.db"
 	db, err := sql.Open("sqlite3", file)
 	
 	if err != nil {
 		panic(err)
 	}
+	return db
+}
+
+func createTableIfNotExists (db *sql.DB) {
+	const create string = `
+		CREATE TABLE IF NOT EXISTS "movies" (
+		"id"	INTEGER,
+		"title"	TEXT NOT NULL,
+		"year"	INTEGER,
+		PRIMARY KEY("id" AUTOINCREMENT)
+	);`
+	_, err := db.Exec(create);
+	if err != nil {
+		panic(err)
+	}
+}
+
+
+func main () {
+
+
+	db := openDb()
+
+	createTableIfNotExists(db)
 
 	// Printing list of movies before insertion
 	var movies []Movie
@@ -87,25 +62,29 @@ func main () {
 		fmt.Printf("[%s] %s (%s)\n", strconv.Itoa(movie.ID), movie.Title, strconv.Itoa(movie.Year))
 	}
 
+	movieId :=  movies[0].ID
+
 	// Printing a single movie
 	var movie Movie
-	movie = readMovie(db, movies[0].ID)
+	movie = readMovie(db, movieId)
 	fmt.Printf("[%s] %s (%s)\n", strconv.Itoa(movie.ID), movie.Title, strconv.Itoa(movie.Year))
 
 
-	updateMovie(db, movies[0].ID, "Interstellar")
+	updateMovie(db, movieId, "Interstellar")
 
 	// Checking update
-	movie = readMovie(db, movies[0].ID)
+	movie = readMovie(db, movieId)
 	fmt.Printf("[%s] %s (%s)\n", strconv.Itoa(movie.ID), movie.Title, strconv.Itoa(movie.Year))
 
 
-	deleteMovie(db, movies[0].ID)
+	deleteMovie(db, movieId)
 
 	// Checking state after deletion
 	movies = readMovies(db)
 	for _, movie := range movies {
 		fmt.Printf("[%s] %s (%s)\n", strconv.Itoa(movie.ID), movie.Title, strconv.Itoa(movie.Year))
 	}
+
+	db.Close()
 
 }
