@@ -7,3 +7,7 @@ Sample code to perofrm CRUD operations in an SQLite database using Go
 ```
 go run .
 ```
+
+## References
+
+https://earthly.dev/blog/golang-sqlite/

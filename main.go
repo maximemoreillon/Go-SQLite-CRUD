@@ -29,15 +29,14 @@ func main () {
 		fmt.Printf("[%s] %s (%s)\n", strconv.Itoa(movie.ID), movie.Title, strconv.Itoa(movie.Year))
 	}
 
-	createMovie(db)
+	newMovie := createMovie(db)
+	movieId :=  newMovie.ID
 
 	// Printing list of movies after creation
 	movies = readMovies(db)
 	for _, movie := range movies {
 		fmt.Printf("[%s] %s (%s)\n", strconv.Itoa(movie.ID), movie.Title, strconv.Itoa(movie.Year))
 	}
-
-	movieId :=  movies[0].ID
 
 	// Printing a single movie
 	var movie Movie

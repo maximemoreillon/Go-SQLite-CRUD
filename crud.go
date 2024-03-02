@@ -3,12 +3,22 @@ package main
 import "database/sql"
 
 
-func createMovie (db *sql.DB) {
+func createMovie (db *sql.DB) Movie {
 	newMovie := Movie{0, "Inception", 2006}
-	_, err := db.Exec("INSERT INTO movies VALUES(null,?,?);", newMovie.Title, newMovie.Year)
+	res, err := db.Exec("INSERT INTO movies VALUES(null,?,?);", newMovie.Title, newMovie.Year)
 	if err != nil {
 		panic(err)
 	}
+
+	id, err := res.LastInsertId()
+	if err != nil {
+		panic(err)
+	}
+
+	newMovie.ID = int(id)
+	return newMovie
+
+
 }
 
 
